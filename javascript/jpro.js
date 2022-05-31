@@ -7,20 +7,20 @@ class Wrapper {
 	get()        { return this._el; }
 }
 
-const loadDependency = url => {
-	new Wrapper()
-		.wrap(document.body)
-		.append(
-			new Wrapper()
-				.create('script')
-				.prop('type', 'text/json')
-				.prop('src', url)
-				.get()
-			);
-};
+// const loadDependency = url => {
+// 	new Wrapper()
+// 		.wrap(document.body)
+// 		.append(
+// 			new Wrapper()
+// 				.create('script')
+// 				.prop('type', 'text/json')
+// 				.prop('src', url)
+// 				.get()
+// 			);
+// };
 
-loadDependency('https://blog.luckly-mjw.cn/tool-show/m3u8-downloader/mux-mp4.js');
-loadDependency('https://blog.luckly-mjw.cn/tool-show/m3u8-downloader/aes-decryptor.js');
+// loadDependency('https://blog.luckly-mjw.cn/tool-show/m3u8-downloader/mux-mp4.js');
+// loadDependency('https://blog.luckly-mjw.cn/tool-show/m3u8-downloader/aes-decryptor.js');
 
 const disk = {
     write(dataFrags, filename, type="text/json") {
@@ -111,11 +111,12 @@ const m3u8 = {
     },
     /* The main interface exposed to outside */
     download(url, filename='video', toMp4=false) {
-		console.info("[m3u8] url: " + url);
-		let applyUrl = (fragUrl, baseUrl) => fragUrl.indexOf('http') > -1 ? fragUrl : `${baseUrl}/${fragUrl}`;
-		let urlPath = url.split('/');
-		{let last = urlPath.pop(); let arr = last.split('.'); arr.pop(); if (filename === 'video') { filename = arr.join('.'); } }
-		let baseUrl = urlPath.join('/');
+	console.info("[m3u8] url: " + url);
+	let applyUrl = (fragUrl, baseUrl) => fragUrl.indexOf('http') > -1 ? fragUrl : `${baseUrl}/${fragUrl}`;
+	let urlPath = url.split('/');
+	{let last = urlPath.pop(); let arr = last.split('.'); arr.pop(); if (filename === 'video') { filename = arr.join('.'); } }
+	let baseUrl = urlPath.join('/');
+    	{let arr = url.split('//'); baseUrl = `${arr[0]}//${arr[1].split('/')[0]}`;}
         m3u8.mp4.toMap4 = toMp4;
         restful.get({url}).then(protocol => {
             protocol.split('\n').forEach(line => {
