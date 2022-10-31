@@ -1,6 +1,8 @@
-import logging
 import os
 import time
+import shutil
+import logging
+import argparse
 from urllib.parse import urlparse
 
 import m3u8
@@ -14,12 +16,26 @@ from Crypto.Cipher import AES
 # 4. merge ts
 
 
+def arg_help():
+    parser = argparse.ArgumentParser()
+    # parser.add_argument('-p', '--port', default=8000, help='port of service')
+    # parser.add_argument('-s', '--services', default="services.json", help='services mapping')
+    # parser.add_argument('-M', '--mongodb', default="127.0.0.1:27017", help='mongodb connection')
+    return parser.parse_args()
+
+
+logging.basicConfig(
+    format='%(asctime)s [%(threadName)s] [%(name)s] [%(levelname)s] %(filename)s[line:%(lineno)d] %(message)s',
+    level=logging.INFO
+)
+args = arg_help()
+cache_dir = 'cache-ts'
+
+
 def _worker(self, ts_link, ts_index):
+    global cache_dir
     count = 1
-    cache_dir = 'cache-ts'
     file_path = "%s/video.%d.ts" % (cache_dir, ts_index)
-    if not os.path.exists(cache_dir):
-        os.mkdir(cache_dir)
     if os.path.exists(file_path):
         os.remove(file_path)
     fp = open(file_path, 'wb+')
@@ -33,6 +49,7 @@ def _worker(self, ts_link, ts_index):
                 count += 1
                 continue
             binary = response.content
+            logging.info("  >> video.%d.ts" % ts_index)
             self.last_time = self.record_time
             self.last_bytes = self.record_bytes
             self.record_time = int(time.time() * 1000)
@@ -104,6 +121,7 @@ class Downloader:
         m3u8key = playlist.keys[0]
         if m3u8key.method != 'AES-128':
             raise Exception('only AES-128 support, but %s' % m3u8key.method)
+        logging.info("Satisfy AES-128")
         key_url = m3u8key.uri if m3u8key.uri.startswith('http') else "%s/%s" % (self.location, m3u8key.uri)
         key_text, _ = self._download(key_url)
         iv = m3u8key.iv if m3u8key.iv is not None else key_text
@@ -121,9 +139,12 @@ class Downloader:
                 ts_file.close()
             except Exception as e:
                 raise e
+        fp.close()
 
     def load(self, m3u8url, output_path="video.ts", thread_number=20):
+        logging.info("Download m3u8 file ...")
         playlist = self.parse_m3u8(m3u8url)
+        logging.info("Download crypt file ...")
         self.decrypt(playlist)
         tasks = []
         for i in range(len(playlist.segments)):
@@ -135,6 +156,10 @@ class Downloader:
         self.last_time = self.record_time
         pool = threadpool.ThreadPool(thread_number)
         reqs = threadpool.makeRequests(_worker, tasks)
+        global cache_dir
+        shutil.rmtree(cache_dir)
+        os.mkdir(cache_dir)
+        logging.info("Multi-thread downloading ...")
         [pool.putRequest(req) for req in reqs]
         while self.completed_segments < self.total_segments:
             if self.record_time > self.last_time:
@@ -142,5 +167,12 @@ class Downloader:
                              % ((self.record_bytes - self.last_bytes) * 1000
                                 / (self.record_time - self.last_time) / 1024 / 1024))
             time.sleep(1)
+        logging.info("Merge ts files ...")
         self.merge(len(tasks), output_path)
         logging.info("Finish downloading!")
+        shutil.rmtree('cache-ts')
+
+
+if __name__ == '__main__':
+    downloader = Downloader()
+    downloader.load("http://1257120875.vod2.myqcloud.com/0ef121cdvodtransgzp1257120875/3055695e5285890780828799271/v.f230.m3u8")
