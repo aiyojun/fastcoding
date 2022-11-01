@@ -66,7 +66,7 @@ def video_task():
         begin = int(time.time() * 1000)
         browser = await launch({
             'headless': True, 'timeout': 30000,
-            'args': ['--no-sandbox', '--proxy-server=socks5://172.16.1.201:1080']
+            'args': ['--no-sandbox', '--proxy-server=socks5://192.168.1.201:1080']
         })
         page = await browser.newPage()
         await page.goto(url)
