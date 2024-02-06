@@ -1,3 +1,5 @@
+# Web tech
+
 ## Javascript tricks
 
 ```javascript

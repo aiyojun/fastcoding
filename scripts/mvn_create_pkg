@@ -1,0 +1,65 @@
+#!/bin/bash
+
+USAGE="mvn_create_pkg PROJECT_NAME"
+
+if [[ $# != 1 ]]; then
+	echo -e "error: Please specify project name!\nUsage: ${USAGE}"
+	exit 1
+fi
+
+PROJECT_NAME=$1
+
+mkdir -p ${PROJECT_NAME}/src/main/java/com/jlib
+mkdir -p ${PROJECT_NAME}/src/test/java/com/jlib
+
+echo "<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+  xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd\">
+	<modelVersion>1.0.0</modelVersion>
+	<groupId>com.jpro</groupId>
+	<artifactId>${PROJECT_NAME}</artifactId>
+	<version>1.0</version>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>8</source>
+					<target>8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>
+" >${PROJECT_NAME}/pom.xml
+
+echo "package com.jlib;
+
+public class ${PROJECT_NAME} {
+	public static void main(String[] args) {
+		System.out.println(\"${PROJECT_NAME}\");
+	}
+}
+
+" >${PROJECT_NAME}/src/main/java/com/jlib/${PROJECT_NAME}.java
+
+
+echo "package com.jlib;
+
+import org.junit.Test;
+
+public class ${PROJECT_NAME}Test {
+	@Test
+	public void test() {
+		System.out.println(\"${PROJECT_NAME}Test\");
+	}
+}
+
+" >${PROJECT_NAME}/src/test/java/com/jlib/${PROJECT_NAME}Test.java
