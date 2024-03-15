@@ -1,0 +1,9 @@
+
+.flowchart-node { position: absolute; user-select: none; }
+.flowchart-port { position: absolute; width: 12px; height: 12px; border-radius: 6px; background: linear-gradient(110deg, #f5fcff, deepskyblue); }
+.flowchart-port-in { left: -6px; }
+.flowchart-port-out { right: -6px; }
+
+.noneffective-events { pointer-events: none; }
+
+.active-frame { border: 1px solid blue; background-color: rgba(0, 0, 255, .1); position: absolute; }
