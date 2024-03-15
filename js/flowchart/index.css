@@ -4,6 +4,8 @@
 .flowchart-port-in { left: -6px; }
 .flowchart-port-out { right: -6px; }
 
+.avocado-barrier { box-sizing: border-box; }
+.avocado-barrier>* { width: 100%; height: 100%; box-sizing: border-box; }
 .noneffective-events { pointer-events: none; }
 
 .active-frame { border: 1px solid blue; background-color: rgba(0, 0, 255, .1); position: absolute; }
