@@ -5,14 +5,20 @@ import './index.css'
 
 export interface Point { x: number; y: number; }
 export interface Rect { width: number; height: number; }
-export interface Node extends Point, Rect { id: string; ip: number, op: number; plugin: any; context: any; }
-export interface Port { node: Node; type: number; index: number; }
+export interface Port { node: Node; type: number; offsetY: number; }
+export interface Node extends Point, Rect { id: string; ports: Array<Port>, plugin: any; context: any; }
 export interface Wire { id: string; src: Port; dst: Port; }
 
 export const useAvocado = defineStore('avocado', () => {
     const nodes = reactive<Array<Node>>([
-        createNode(50, 50, 300, 240, 2, 2, 'article'),
-        createNode(600, 200, 300, 200, 1, 1, 'article'),
+        createNode(50, 50, 200, 50, [
+            {node: null, offsetY: 25, type: 0},
+            {node: null, offsetY: 25, type: 1},
+        ], 'PluginLabel', {label: 'To gray image'}),
+        createNode(600, 200, 200, 50, [
+            {node: null, offsetY: 25, type: 0},
+            {node: null, offsetY: 25, type: 1},
+        ], 'PluginLabel', {label: 'Gradient'}),
     ])
     const wires = reactive<Array<Wire>>([])
     const palette = reactive({ width: 0, height: 0, offsetX: 0, offsetY: 0 })
@@ -22,8 +28,13 @@ export const useAvocado = defineStore('avocado', () => {
     function coordination(e: MouseEvent): Point {
         return {x: e.clientX - palette.offsetX, y: e.clientY - palette.offsetY}
     }
-    function createNode(x: number, y: number, width: number, height: number, ip: number = 0, op: number = 0, plugin: any = null, context: any = null): Node {
-        return {id: uuid(), ip, op, x, y, width, height, plugin, context}
+    function createNode(
+        x: number, y: number, width: number, height: number,
+        ports: Array<Port> = [],
+        plugin: any = null, context: any = null): Node {
+        const node = {id: uuid(), ports, x, y, width, height, plugin, context}
+        ports.forEach(p => p.node = node)
+        return node
     }
     function removeNode(id: string) {
         wires

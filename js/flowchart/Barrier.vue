@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import {useAvocado} from "./avocado.js";
-import {stopPropagation} from "../utils";
+import {stopPropagation} from "../utils.js";
 const avocado = useAvocado()
 
 </script>

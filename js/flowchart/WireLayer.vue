@@ -9,7 +9,7 @@ function computePointCoordination(port: Port): Point {
   const node = port.node
   return {
     x: node.x + (port.type === 1 ? node.width : 0),
-    y: node.y + node.height / ((port.type === 1 ? node.op : node.ip) + 1) * (port.index + 1)
+    y: node.y + port.offsetY
   }
 }
 
