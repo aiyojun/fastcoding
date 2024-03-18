@@ -5,9 +5,10 @@ import {scale2d} from "./jlib.js";
 import './index.css'
 
 export interface Point { x: number; y: number; }
-export interface Rect { width: number; height: number; }
+export interface Size { width: number; height: number; }
+export interface Rect extends Point, Size { }
 export interface Port { type: number; offsetY: number; }
-export interface Node extends Point, Rect { id: string; ports: Array<Port>; plugin: any; context: any; }
+export interface Node extends Rect { id: string; ports: Array<Port>; plugin: any; context: any; }
 export interface Wire { id: string; src: { node: Node; port: Port }; dst: { node: Node; port: Port }; }
 export interface NodePort { node: Node; port: Port; }
 export interface Group { id: string; nodes: Array<Node>; }
@@ -17,7 +18,7 @@ const preset = { snap: (n: number) =>
         n
         // Math.floor(n / 5) * 5
 }
-export function useAvocadoPreset(options: Record<keyof preset, any>) { Object.assign(preset, options) }
+export function useAvocadoPreset(options: Record<keyof typeof preset, any>) { Object.assign(preset, options) }
 export const useAvocado = defineStore('avocado', () => {
     const nodes = reactive<Array<Node>>([])
     const wires = reactive<Array<Wire>>([])
@@ -44,8 +45,8 @@ export const useAvocado = defineStore('avocado', () => {
             { label: 'NEW NODE ( TESTING )', types: [TARGET_TYPE.PALETTE, TARGET_TYPE.NODE, TARGET_TYPE.PORT], listener: () => {
                     const p = coordination(menu.event)
                     nodes.push(createNode(p.x, p.y, 200, 50, [
-                        {offsetY: 25, type: 0, styles: { border: '2px solid orange', backgroundColor: 'white' }},
-                        {offsetY: 25, type: 1, styles: { border: '2px solid orange', backgroundColor: 'white' }},
+                        {offsetY: 25, type: 0},
+                        {offsetY: 25, type: 1},
                     ], 'PluginLabel', {label: 'Module ' + nodes.length}))
             } },
             { label: 'CLEAR', types: [TARGET_TYPE.PALETTE, TARGET_TYPE.NODE, TARGET_TYPE.PORT], listener: () => {
@@ -164,7 +165,7 @@ export const useAvocado = defineStore('avocado', () => {
             Object.assign(activeWire, { active: true, start, p1: coordination(e) })
         } else if (e.buttons === 2) {
             ignore(e)
-            openMenu(e, TARGET_TYPE.NODE, node)
+            openMenu(e, TARGET_TYPE.NODE, start.node)
         } else {
             closeMenu()
         }
