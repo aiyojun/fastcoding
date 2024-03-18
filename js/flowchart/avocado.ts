@@ -1,6 +1,6 @@
 import {reactive, shallowRef} from "vue";
 import {defineStore} from "pinia";
-import {clone, ignore, inRect, uuid} from "../utils.js";
+import {clone, ignore, uuid} from "../utils.js";
 import {scale2d} from "./jlib.js";
 import './index.css'
 
@@ -17,6 +17,10 @@ export const TARGET_TYPE = { PALETTE: 0, NODE: 1, PORT: 2, WIRE: 3, GROUP: 4, FR
 const preset = { snap: (n: number) =>
         n
         // Math.floor(n / 5) * 5
+}
+function inRect(p0: Point, p1: Point, rect: Rect) {
+    return p0.x > rect.x && p0.x < rect.x + rect.width && p0.y > rect.y && p0.y < rect.y + rect.height
+        && p1.x > rect.x && p1.x < rect.x + rect.width && p1.y > rect.y && p1.y < rect.y + rect.height
 }
 export function useAvocadoPreset(options: Record<keyof typeof preset, any>) { Object.assign(preset, options) }
 export const useAvocado = defineStore('avocado', () => {
@@ -217,7 +221,7 @@ export const useAvocado = defineStore('avocado', () => {
             selectedNodes.splice(0, selectedNodes.length)
             nodes.forEach(node => {
                 const p0 = {x: node.x, y: node.y}
-                const p1 = {x: node.x + node.width, y: node.y + node.height}
+                const p1 = {x: node.x + node.width * palette.scale, y: node.y + node.height * palette.scale}
                 if (inRect(p0, p1, frame)) selectedNodes.push(node)
             })
         }
