@@ -10,7 +10,7 @@ const avocado = useAvocado()
 
   <div class="avocado-barrier relative"
        :class="{'noneffective-events': avocado.cursor.task > -1}"
-       @mousedown="stopPropagation" @mouseup="stopPropagation" @mousemove="stopPropagation" @click="stopPropagation">
+       @mousedown="stopPropagation" @mouseup="stopPropagation" @mousemove="stopPropagation">
     <slot></slot>
   </div>
 
