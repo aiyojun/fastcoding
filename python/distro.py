@@ -5,6 +5,8 @@ import traceback
 import uuid
 from typing import Optional, Callable, Awaitable, List, Dict
 
+from numpy.f2py.rules import options
+
 import voxe
 
 
@@ -253,6 +255,20 @@ class Duplex:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s:%(name)s:%(levelname)s : %(message)s')
+    import argparse
+    import sys
+    import pathlib
+
+    def parse_arg(argv):
+        parser = argparse.ArgumentParser(description="")
+        parser.add_argument("--mode", help="工作模式。", type=str, default="server", choices=("server", "client"))
+        parser.add_argument("--port", help="服务端口号", type=int, default=9999)
+        parser.add_argument("--host", help="服务IP", type=str, default="127.0.0.1")
+        parser.add_argument("--path", help="静态资源路径，用于读取相对路径的文件。", type=str, default=".")
+        parser.add_argument("files", nargs="*")
+        return parser.parse_args(argv)
+
+    args = parse_arg(sys.argv[1:])
 
     async def cost(duplex, session, method, args):
         t0 = int(time.time() * 1000)
@@ -260,32 +276,33 @@ if __name__ == '__main__':
         logging.info(f"distro::request::{method} {int(time.time() * 1000) - t0}ms")
         return r
 
+    def read_file(path):
+        path = pathlib.Path(path)
+        if path.is_absolute():
+            return path.read_bytes()
+        else:
+            return (pathlib.Path(args.path) / path).read_bytes()
+
     async def run_server():
-        import pathlib
         duplex = Duplex()
-        duplex.scopes["greeting"] = lambda name: print(f"- hello {name}")
-        duplex.scopes["readfile"] = lambda path: pathlib.Path(path).read_bytes()
-        srv = await duplex.run_as_server()
+        duplex.scopes["readfile"] = read_file
+        srv = await duplex.run_as_server(port=args.port)
         await srv.wait_closed()
 
     async def run_client():
         duplex = Duplex()
-        cli = await duplex.run_as_client()
+        cli = await duplex.run_as_client(host=args.host, port=args.port)
         srv = list(duplex.sessions)[0]
-        await cost(duplex, srv, "greeting", ["simon"])
-        for r in range(10):
-            binaries = await cost(duplex, srv, "readfile", ["1.tiff"])
-            # with open("2.tiff", 'wb+') as fp:
-            #     fp.write(binaries)
+        files = args.files
+        for file in files:
+            data = await cost(duplex, srv, "readfile", [file])
+            # binaries = await cost(duplex, srv, "readfile", [file])
+            with open(file, 'wb+') as fp:
+                fp.write(data)
         cli.close()
         await cli.wait_closed()
 
-    import sys
-    if len(sys.argv) != 2 or sys.argv[-1] not in ["server", "client"]:
-        print("usage : distro [server|client]")
-        exit(1)
-
-    if sys.argv[-1] == "server":
+    if args.mode == "server":
         asyncio.run(run_server())
     else:
         asyncio.run(run_client())
